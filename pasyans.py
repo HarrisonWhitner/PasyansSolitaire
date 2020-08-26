@@ -128,6 +128,9 @@ if __name__ == '__main__':  # main guard
     # deal cards into 9 columns of 4
     pasyans_columns = [[pasyans_deck.draw() for i in range(4)] for j in range(9)]
 
+    # create column names
+    pasyans_column_names = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'E']
+
     # create empty slot
     pasyans_empty = []
 
@@ -140,8 +143,7 @@ if __name__ == '__main__':  # main guard
         for row in range(max([len(col) for col in pasyans_columns])):
             for col in pasyans_columns:
                 print(col[row].to_str() if row < len(col)
-                      else '[  ]' if row == 0 and len(col) == 0
-                else '    ', '   ', end='')
+                      else '[  ]' if row == 0 and len(col) == 0 else '    ', '   ', end='')
             if row == 0:
                 print(pasyans_empty[0].to_str() if len(pasyans_empty) > 0 else '[  ]', sep='', end='')
             print()
@@ -187,47 +189,54 @@ if __name__ == '__main__':  # main guard
             pasyans_input = input('> ').split()
 
             # verify input
-            if pasyans_input[0] in ['move', 'undo', 'end']:
+            if pasyans_input[0] in ['move', 'mv', 'undo', 'end']:
                 valid_input = True
 
             else:
                 print('Invalid command. Valid commands: move <c> <c>, undo, end')
 
         # handle move commands
-        if pasyans_input[0] == 'move':
-            src_col = pasyans_empty if pasyans_input[1] == 'E' else pasyans_columns[int(pasyans_input[1]) - 1]
-            dest_col = pasyans_empty if pasyans_input[2] == 'E' else pasyans_columns[int(pasyans_input[2]) - 1]
+        if pasyans_input[0] in ['move', 'mv']:
 
-            # check for when source column is empty
-            if len(src_col) == 0:
-                print('Source column is empty, move cannot be performed.')
-
-            # check empty not already filled
-            elif dest_col is pasyans_empty and len(pasyans_empty) > 0:
-                print('Empty already contains a card, move cannot be performed.')
+            # check for invalid args
+            if len(pasyans_input) < 3 or pasyans_input[1] not in pasyans_column_names \
+                    or pasyans_input[2] not in pasyans_column_names:
+                print('Invalid move command. Valid form: move <c> <c>')
 
             else:
-                block_size = 1  # determine how many cards will be moved in a block
-                if len(src_col) > 1 and src_col is not pasyans_empty and dest_col is not pasyans_empty:
-                    while pasyans_valid(src_col[-block_size], src_col[-block_size - 1]):
-                        block_size += 1
-                        if block_size == len(src_col):
-                            break
+                src_col = pasyans_empty if pasyans_input[1] == 'E' else pasyans_columns[int(pasyans_input[1]) - 1]
+                dest_col = pasyans_empty if pasyans_input[2] == 'E' else pasyans_columns[int(pasyans_input[2]) - 1]
 
-                # check for invalid move
-                if len(dest_col) > 0 and not pasyans_valid(src_col[-block_size], dest_col[-1]):
-                    while block_size > 0:  # try smaller block sizes if possible
-                        block_size -= 1
-                        if pasyans_valid(src_col[-block_size], dest_col[-1]):
-                            dest_col.extend(src_col[-block_size:])  # copy block from source to destination column
-                            del src_col[-block_size:]  # remove block from source column
-                            break
-                    if block_size == 0:
-                        print('Invalid move.')
+                # check for when source column is empty
+                if len(src_col) == 0:
+                    print('Source column is empty, move cannot be performed.')
+
+                # check empty not already filled
+                elif dest_col is pasyans_empty and len(pasyans_empty) > 0:
+                    print('Empty already contains a card, move cannot be performed.')
 
                 else:
-                    dest_col.extend(src_col[-block_size:])  # copy block from source to destination column
-                    del src_col[-block_size:]  # remove block from source column
+                    block_size = 1  # determine how many cards will be moved in a block
+                    if len(src_col) > 1 and src_col is not pasyans_empty and dest_col is not pasyans_empty:
+                        while pasyans_valid(src_col[-block_size], src_col[-block_size - 1]):
+                            block_size += 1
+                            if block_size == len(src_col):
+                                break
+
+                    # check for invalid move
+                    if len(dest_col) > 0 and not pasyans_valid(src_col[-block_size], dest_col[-1]):
+                        while block_size > 0:  # try smaller block sizes if possible
+                            block_size -= 1
+                            if pasyans_valid(src_col[-block_size], dest_col[-1]):
+                                dest_col.extend(src_col[-block_size:])  # copy block from source to destination column
+                                del src_col[-block_size:]  # remove block from source column
+                                break
+                        if block_size == 0:
+                            print('Invalid move.')
+
+                    else:
+                        dest_col.extend(src_col[-block_size:])  # copy block from source to destination column
+                        del src_col[-block_size:]  # remove block from source column
 
         # handle undo commands
         # elif pasyans_input[0] == 'undo':
