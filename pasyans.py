@@ -225,12 +225,13 @@ if __name__ == '__main__':  # main guard
 
                     # check for invalid move
                     if len(dest_col) > 0 and not pasyans_valid(src_col[-block_size], dest_col[-1]):
+                        block_size -= 1
                         while block_size > 0:  # try smaller block sizes if possible
-                            block_size -= 1
                             if pasyans_valid(src_col[-block_size], dest_col[-1]):
                                 dest_col.extend(src_col[-block_size:])  # copy block from source to destination column
                                 del src_col[-block_size:]  # remove block from source column
                                 break
+                            block_size -= 1
                         if block_size == 0:
                             print('Invalid move.')
 
