@@ -5,6 +5,7 @@
 from enum import Enum, IntEnum  # for suits and ranks of cards
 from random import shuffle  # for shuffling cards in a deck
 from termcolor import colored  # for colored card text
+from sys import exit  # for game quit
 
 
 class Suit(Enum):
@@ -110,138 +111,162 @@ class Deck:
 
 if __name__ == '__main__':  # main guard
 
-    # create the pasyans deck
-    # noinspection PyTypeChecker
-    pasyans_deck = Deck([Rank.SIX,
-                         Rank.SEVEN,
-                         Rank.EIGHT,
-                         Rank.NINE,
-                         Rank.TEN,
-                         Rank.JACK,
-                         Rank.QUEEN,
-                         Rank.KING,
-                         Rank.ACE])
-
-    # shuffle the deck
-    pasyans_deck.shuffle()
-
-    # deal cards into 9 columns of 4
-    pasyans_columns = [[pasyans_deck.draw() for i in range(4)] for j in range(9)]
-
-    # create column names
     pasyans_column_names = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'E']
+    pasyans_move_commands = ['move', 'mv']
+    pasyans_exit_commands = ['exit', 'end', 'quit']
 
-    # create empty slot
-    pasyans_empty = []
+    pasyans_win_count = 0
 
-    # function for showing current game state
-    def pasyans_show():
+    # main game loop, resets game after win achieved
+    while True:
 
-        # TODO clear terminal
+        # create the pasyans deck
+        # noinspection PyTypeChecker
+        pasyans_deck = Deck([Rank.SIX,
+                             Rank.SEVEN,
+                             Rank.EIGHT,
+                             Rank.NINE,
+                             Rank.TEN,
+                             Rank.JACK,
+                             Rank.QUEEN,
+                             Rank.KING,
+                             Rank.ACE])
 
-        # iterate through row values, then through columns for printing
-        for row in range(max([len(col) for col in pasyans_columns])):
-            for col in pasyans_columns:
-                print(col[row].to_str() if row < len(col)
-                      else '[  ]' if row == 0 and len(col) == 0 else '    ', '   ', end='')
-            if row == 0:
-                print(pasyans_empty[0].to_str() if len(pasyans_empty) > 0 else '[  ]', sep='', end='')
+        # shuffle the deck
+        pasyans_deck.shuffle()
+
+        # deal cards into 9 columns of 4
+        pasyans_columns = [[pasyans_deck.draw() for i in range(4)] for j in range(9)]
+
+        # create empty slot
+        pasyans_empty = []
+
+        # function for showing current game state
+        def pasyans_show():
+
+            # TODO clear terminal
+
+            # iterate through row values, then through columns for printing
+            for row in range(max([len(col) for col in pasyans_columns])):
+                for col in pasyans_columns:
+                    print(col[row].to_str() if row < len(col)
+                          else '[  ]' if row == 0 and len(col) == 0 else '    ', '   ', end='')
+                if row == 0:
+                    print(pasyans_empty[0].to_str() if len(pasyans_empty) > 0 else '[  ]', sep='', end='')
+                print()
+
+            # print column numbers and empty at the bottom
+            for i in range(9):
+                print(' ' + str(i + 1) + '  ', '   ', end='')
+            print(' E')
+
+            # add empty line at bottom for spacing
             print()
 
-        # print column numbers and empty at the bottom
-        for i in range(9):
-            print(' ' + str(i + 1) + '  ', '   ', end='')
-        print(' E')
+        # function for checking if two cards are in a valid order
+        def pasyans_valid(first, second) -> bool:
 
-        # add empty line at bottom for spacing
-        print()
+            # check both royal or normal
+            if (first.rank in ROYAL_RANKS) != (second.rank in ROYAL_RANKS):
+                return False
 
+            # handle royal cards
+            elif first.rank in ROYAL_RANKS:
+                return first.suit == second.suit
 
-    # function for checking if two cards are in a valid order
-    def pasyans_valid(first, second) -> bool:
-
-        # check both royal or normal
-        if (first.rank in ROYAL_RANKS) != (second.rank in ROYAL_RANKS):
-            return False
-
-        # handle royal cards
-        elif first.rank in ROYAL_RANKS:
-            return first.suit == second.suit
-
-        # handle normal cards
-        else:
-            return first.diff_color(second) and first.rank < second.rank
-
-
-    # start game loop
-    pasyans_win = False
-    while not pasyans_win:
-
-        # show cards
-        pasyans_show()
-
-        # loop until valid input is collected
-        pasyans_input = None
-        valid_input = False
-        while not valid_input:
-
-            # collect user input
-            pasyans_input = input('> ').split()
-
-            # verify input
-            if pasyans_input[0] in ['move', 'mv', 'undo', 'end']:
-                valid_input = True
-
+            # handle normal cards
             else:
-                print('Invalid command. Valid commands: move <c> <c>, undo, end')
+                return first.diff_color(second) and first.rank == second.rank - 1
 
-        # handle move commands
-        if pasyans_input[0] in ['move', 'mv']:
+        # checks whether the current game state is a win
+        def pasyans_check_win() -> bool:
 
-            # check for invalid args
-            if len(pasyans_input) < 3 or pasyans_input[1] not in pasyans_column_names \
-                    or pasyans_input[2] not in pasyans_column_names:
-                print('Invalid move command. Valid form: move <c> <c>')
+            # check that every column is in a valid order (empty is valid) and empty slot is empty
+            return all([all([pasyans_valid(col[-i], col[-i - 1]) for i in range(1, len(col))])
+                        if len(col) > 0 else True for col in pasyans_columns]) and len(pasyans_empty) == 0
 
-            else:
-                src_col = pasyans_empty if pasyans_input[1] == 'E' else pasyans_columns[int(pasyans_input[1]) - 1]
-                dest_col = pasyans_empty if pasyans_input[2] == 'E' else pasyans_columns[int(pasyans_input[2]) - 1]
+        # start game loop
+        pasyans_win = False
+        while not pasyans_win:
 
-                # check for when source column is empty
-                if len(src_col) == 0:
-                    print('Source column is empty, move cannot be performed.')
+            # show cards
+            pasyans_show()
 
-                # check empty not already filled
-                elif dest_col is pasyans_empty and len(pasyans_empty) > 0:
-                    print('Empty already contains a card, move cannot be performed.')
+            # loop until valid input is collected
+            pasyans_command = None
+            pasyans_args = None
+            valid_input = False
+            while not valid_input:
+
+                # collect user input
+                pasyans_input = input('> ').split()
+                pasyans_command, pasyans_args = pasyans_input[0], pasyans_input[1:]
+
+                # verify command
+                if pasyans_command in pasyans_move_commands + ['win'] + pasyans_exit_commands:
+                    valid_input = True
 
                 else:
-                    block_size = 1  # determine how many cards will be moved in a block
-                    if len(src_col) > 1 and src_col is not pasyans_empty and dest_col is not pasyans_empty:
-                        while pasyans_valid(src_col[-block_size], src_col[-block_size - 1]):
-                            block_size += 1
-                            if block_size == len(src_col):
-                                break
+                    print('Invalid command. Valid commands: move <c> <c>, end, win')
 
-                    # check for invalid move
-                    if len(dest_col) > 0 and not pasyans_valid(src_col[-block_size], dest_col[-1]):
-                        block_size -= 1
-                        while block_size > 0:  # try smaller block sizes if possible
-                            if pasyans_valid(src_col[-block_size], dest_col[-1]):
-                                dest_col.extend(src_col[-block_size:])  # copy block from source to destination column
-                                del src_col[-block_size:]  # remove block from source column
-                                break
-                            block_size -= 1
-                        if block_size == 0:
-                            print('Invalid move.')
+            # handle move commands
+            if pasyans_command in pasyans_move_commands:
+
+                # check for invalid args
+                if len(pasyans_args) < 2 or pasyans_args[0] not in pasyans_column_names \
+                        or pasyans_args[1] not in pasyans_column_names:
+                    print('Invalid move command. Valid form: move <c> <c>')
+
+                else:
+                    src_col = pasyans_empty if pasyans_args[0] == 'E' else pasyans_columns[int(pasyans_args[0]) - 1]
+                    dest_col = pasyans_empty if pasyans_args[1] == 'E' else pasyans_columns[int(pasyans_args[1]) - 1]
+
+                    # check for when source column is empty
+                    if len(src_col) == 0:
+                        print('Source column is empty, move cannot be performed.')
+
+                    # check empty not already filled
+                    elif dest_col is pasyans_empty and len(pasyans_empty) > 0:
+                        print('Empty already contains a card, move cannot be performed.')
 
                     else:
-                        dest_col.extend(src_col[-block_size:])  # copy block from source to destination column
-                        del src_col[-block_size:]  # remove block from source column
+                        block_size = 1  # determine how many cards will be moved in a block
+                        if len(src_col) > 1 and src_col is not pasyans_empty and dest_col is not pasyans_empty:
+                            while pasyans_valid(src_col[-block_size], src_col[-block_size - 1]):
+                                block_size += 1
+                                if block_size == len(src_col):
+                                    break
 
-        # handle undo commands
-        # elif pasyans_input[0] == 'undo':
+                        # check for invalid move
+                        if len(dest_col) > 0 and not pasyans_valid(src_col[-block_size], dest_col[-1]):
+                            block_size -= 1
+                            while block_size > 0:  # try smaller block sizes if possible
+                                if pasyans_valid(src_col[-block_size], dest_col[-1]):
+                                    dest_col.extend(src_col[-block_size:])  # copy block from source to dest column
+                                    del src_col[-block_size:]  # remove block from source column
+                                    break
+                                block_size -= 1
+                            if block_size == 0:
+                                print('Invalid move.')
 
-        # handle end commands TODO improve to check for win state or ask to leave
-        elif pasyans_input[0] == 'end':
-            pasyans_win = True
+                        else:
+                            dest_col.extend(src_col[-block_size:])  # copy block from source to destination column
+                            del src_col[-block_size:]  # remove block from source column
+
+            # handle undo commands
+            # elif pasyans_command == 'undo':
+
+            # handle win command
+            elif pasyans_command == 'win':
+                if pasyans_check_win():
+                    pasyans_win = True
+                    pasyans_win_count += 1
+                    print('YOU WIN! Current win streak:', pasyans_win_count)
+                    print('Creating new game...')
+                else:
+                    print('You have not won yet, sorry. Keep going!')
+
+            # handle exit command
+            elif pasyans_command in pasyans_exit_commands:
+                if input('Are you sure you want to exit? ') in ['Yes', 'yes', 'Y', 'y']:
+                    exit()
