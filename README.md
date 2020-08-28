@@ -1,7 +1,7 @@
 # Pasyans Solitaire
-A solitaire-like game played in the terminal.
+A solitaire-like game played in a shell.
 
-Also known as пасьянс (solitaire in Russian), it's originally a minigame within EXAPUNKS by Zachtronics. Pasyans is a simple way to kill time and something I wanted to be able to play in a separate window.
+Also known as **пасьянс** (*solitaire* in Russian), it's originally a minigame within [EXAPUNKS by Zachtronics](http://www.zachtronics.com/exapunks/). Pasyans is a simple way to kill time and something I wanted to be able to play in a separate window.
 
 ### Rules
 
