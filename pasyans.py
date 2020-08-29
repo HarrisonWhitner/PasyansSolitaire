@@ -158,7 +158,7 @@ if __name__ == '__main__':  # main guard
             # print cell numbers and free cell at the bottom
             for i in range(9):
                 print(' ' + str(i + 1) + '  ', '   ', end='')
-            print(' E')
+            print(' F')
 
             # add blank line at bottom for spacing
             print()
@@ -218,8 +218,8 @@ if __name__ == '__main__':  # main guard
                     print('Invalid move command. Valid form: move <c> <c>')
 
                 else:
-                    src_col = pasyans_free_cell if pasyans_args[0] == 'E' else pasyans_cells[int(pasyans_args[0]) - 1]
-                    dest_col = pasyans_free_cell if pasyans_args[1] == 'E' else pasyans_cells[int(pasyans_args[1]) - 1]
+                    src_col = pasyans_free_cell if pasyans_args[0] == 'F' else pasyans_cells[int(pasyans_args[0]) - 1]
+                    dest_col = pasyans_free_cell if pasyans_args[1] == 'F' else pasyans_cells[int(pasyans_args[1]) - 1]
 
                     # check for when source cell is empty
                     if len(src_col) == 0:
@@ -255,6 +255,7 @@ if __name__ == '__main__':  # main guard
 
             # handle undo commands
             # elif pasyans_command == 'undo':
+            # TODO implement undo command
 
             # handle win command
             elif pasyans_command == 'win':
@@ -268,5 +269,5 @@ if __name__ == '__main__':  # main guard
 
             # handle exit command
             elif pasyans_command in pasyans_exit_commands:
-                if input('Are you sure you want to exit? ') in ['Yes', 'yes', 'Y', 'y']:
+                if input('Are you sure you want to exit? ') in ['yes', 'y']:
                     exit()
