@@ -22,3 +22,10 @@ Also known as **пасьянс** (*solitaire* in Russian), it's originally a min
 + **Exit**: Used to end the game. Prompts the player to confirm yes before quiting.
 
    Ex. `exit`
+   
+### Install
+Use to install the game script, so that the game can be started by entering `pasyans` in your shell while in any directory. **Note:** The install script will prompt you for your shell's password, since it is necessary to copy a file into your `/usr/local/bin` directory.
+
+   Enter `source install.sh` in to your shell  
+   
+   *Python 3 is required to run the game script, which is not included within the install.sh script. To install Python 3, check [here](https://www.python.org/downloads/)*
