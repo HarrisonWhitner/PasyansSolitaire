@@ -6,6 +6,7 @@ from enum import Enum, IntEnum  # for suits and ranks of cards
 from random import shuffle  # for shuffling cards in a deck
 from termcolor import colored  # for colored card text
 from sys import exit  # for game quit
+import os  # for clearing shell
 
 
 class Suit(Enum):
@@ -115,6 +116,7 @@ if __name__ == '__main__':  # main guard
     pasyans_move_commands = ['move', 'mv']
     pasyans_exit_commands = ['exit', 'end', 'quit']
 
+    pasyans_status_line = ''
     pasyans_win_count = 0
 
     # main game loop, resets game after win achieved
@@ -144,7 +146,12 @@ if __name__ == '__main__':  # main guard
         # function for showing current game state
         def pasyans_show():
 
-            # TODO clear terminal
+            # clear terminal
+            os.system('cls' if os.name == 'nt' else 'clear')
+
+            # print status line
+            print('═> ' + pasyans_status_line + ' <' + '═' * (71 - len(pasyans_status_line))
+                  if len(pasyans_status_line) > 0 else '═' * 76)
 
             # iterate through row values, then through cells for printing
             for row in range(max([len(col) for col in pasyans_cells])):
@@ -199,15 +206,16 @@ if __name__ == '__main__':  # main guard
             while not valid_input:
 
                 # collect user input
-                pasyans_input = input('> ').split()
-                pasyans_command, pasyans_args = pasyans_input[0], pasyans_input[1:]
+                pasyans_input = input('» ').split()
+                pasyans_command = '' if len(pasyans_input) == 0 else pasyans_input[0]
+                pasyans_args = [] if len(pasyans_input) == 0 else pasyans_input[1:]
 
                 # verify command
                 if pasyans_command in pasyans_move_commands + ['win'] + pasyans_exit_commands:
                     valid_input = True
 
                 else:
-                    print('Invalid command. Valid commands: move <c> <c>, end, win')
+                    pasyans_status_line = 'invalid command, try `move <c> <c>`, `end`, `win`'
 
             # handle move commands
             if pasyans_command in pasyans_move_commands:
@@ -215,7 +223,7 @@ if __name__ == '__main__':  # main guard
                 # check for invalid args
                 if len(pasyans_args) < 2 or pasyans_args[0] not in pasyans_cell_names \
                         or pasyans_args[1] not in pasyans_cell_names:
-                    print('Invalid move command. Valid form: move <c> <c>')
+                    pasyans_status_line = 'invalid move command, try `move <c> <c>`'
 
                 else:
                     src_col = pasyans_free_cell if pasyans_args[0] == 'F' else pasyans_cells[int(pasyans_args[0]) - 1]
@@ -223,11 +231,11 @@ if __name__ == '__main__':  # main guard
 
                     # check for when source cell is empty
                     if len(src_col) == 0:
-                        print('Source cell is empty, move cannot be performed.')
+                        pasyans_status_line = 'source cell is empty, move cannot be performed'
 
                     # check free cell not already filled
                     elif dest_col is pasyans_free_cell and len(pasyans_free_cell) > 0:
-                        print('Free cell already contains a card, move cannot be performed.')
+                        pasyans_status_line = 'free cell already contains a card, move cannot be performed'
 
                     else:
                         stack_size = 1  # determine how many cards will be moved in a stack
@@ -244,14 +252,16 @@ if __name__ == '__main__':  # main guard
                                 if pasyans_valid(src_col[-stack_size], dest_col[-1]):
                                     dest_col.extend(src_col[-stack_size:])  # copy stack from source to dest cell
                                     del src_col[-stack_size:]  # remove stack from source cell
+                                    pasyans_status_line = ''
                                     break
                                 stack_size -= 1
                             if stack_size == 0:
-                                print('Invalid move.')
+                                pasyans_status_line = 'invalid move'
 
                         else:
                             dest_col.extend(src_col[-stack_size:])  # copy stack from source to destination cell
                             del src_col[-stack_size:]  # remove stack from source cell
+                            pasyans_status_line = ''
 
             # handle undo commands
             # elif pasyans_command == 'undo':
@@ -262,12 +272,11 @@ if __name__ == '__main__':  # main guard
                 if pasyans_check_win():
                     pasyans_win = True
                     pasyans_win_count += 1
-                    print('YOU WIN! Current win streak:', pasyans_win_count)
-                    print('Creating new game...')
+                    pasyans_status_line = 'YOU WIN! current win streak: ' + str(pasyans_win_count)
                 else:
-                    print('You have not won yet, sorry. Keep going!')
+                    pasyans_status_line = 'you haven\'t won yet, keep going!'
 
             # handle exit command
             elif pasyans_command in pasyans_exit_commands:
-                if input('Are you sure you want to exit? ') in ['yes', 'y']:
+                if input('are you sure you want to exit? » ') in ['yes', 'y']:
                     exit()
