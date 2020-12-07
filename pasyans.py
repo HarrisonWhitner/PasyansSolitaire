@@ -120,12 +120,17 @@ class Deck:
 
 if __name__ == '__main__':  # main guard
 
-    pasyans_cell_names = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'F']
+    pasyans_cell_names = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'F', 'f']
     pasyans_move_commands = ['move', 'mv']
     pasyans_exit_commands = ['exit', 'end', 'quit']
 
     pasyans_status_line = ''
     pasyans_win_count = 0
+
+    # stacks which store info on previous moves
+    pasyans_prev_move_src = None
+    pasyans_prev_move_dst = None
+    pasyans_prev_move_sz = None
 
     # main game loop, resets game after win achieved
     while True:
@@ -162,13 +167,16 @@ if __name__ == '__main__':  # main guard
                   if len(pasyans_status_line) > 0 else '═' * 76)
 
             # iterate through row values, then through cells for printing
-            for row in range(max([len(col) for col in pasyans_cells])):
-                for col in pasyans_cells:
-                    print(col[row].to_str() if row < len(col)
-                          else '[  ]' if row == 0 and len(col) == 0 else '    ', '   ', end='')
+            for row in range(max([len(cell) for cell in pasyans_cells])):
+                for cell in pasyans_cells:
+                    print(cell[row].to_str() if row < len(cell)
+                          else '[  ]' if row == 0 and len(cell) == 0 else '    ', '   ', end='')
                 if row == 0:
                     print(pasyans_free_cell[0].to_str() if len(pasyans_free_cell) > 0 else '[  ]', sep='', end='')
                 print()
+
+            # add blank line between cells and cell numbers
+            print()
 
             # print cell numbers and free cell at the bottom
             for i in range(9):
@@ -197,8 +205,8 @@ if __name__ == '__main__':  # main guard
         def pasyans_check_win() -> bool:
 
             # check that every cell is in a valid order (empty is valid) and free cell is empty
-            return all([all([pasyans_valid(col[-i], col[-i - 1]) for i in range(1, len(col))])
-                        if len(col) > 0 else True for col in pasyans_cells]) and len(pasyans_free_cell) == 0
+            return all([all([pasyans_valid(cell[-i], cell[-i - 1]) for i in range(1, len(cell))])
+                        if len(cell) > 0 else True for cell in pasyans_cells]) and len(pasyans_free_cell) == 0
 
         # start game loop
         pasyans_win = False
@@ -234,42 +242,42 @@ if __name__ == '__main__':  # main guard
                     pasyans_status_line = 'invalid move command, try `move <c> <c>`'
 
                 else:
-                    src_col = pasyans_free_cell if pasyans_args[0] == 'F' else pasyans_cells[int(pasyans_args[0]) - 1]
-                    dest_col = pasyans_free_cell if pasyans_args[1] == 'F' else pasyans_cells[int(pasyans_args[1]) - 1]
+                    src_cell = pasyans_free_cell if pasyans_args[0] in ['F', 'f'] \
+                        else pasyans_cells[int(pasyans_args[0]) - 1]
+                    dst_cell = pasyans_free_cell if pasyans_args[1] in ['F', 'f'] \
+                        else pasyans_cells[int(pasyans_args[1]) - 1]
 
                     # check for when source cell is empty
-                    if len(src_col) == 0:
+                    if len(src_cell) == 0:
                         pasyans_status_line = 'source cell is empty, move cannot be performed'
 
                     # check free cell not already filled
-                    elif dest_col is pasyans_free_cell and len(pasyans_free_cell) > 0:
+                    elif dst_cell is pasyans_free_cell and len(pasyans_free_cell) > 0:
                         pasyans_status_line = 'free cell already contains a card, move cannot be performed'
 
+                    # otherwise, attempt the move
                     else:
-                        stack_size = 1  # determine how many cards will be moved in a stack
-                        if len(src_col) > 1 and src_col is not pasyans_free_cell and dest_col is not pasyans_free_cell:
-                            while pasyans_valid(src_col[-stack_size], src_col[-stack_size - 1]):
+
+                        # determine the max stack size (number of cards) that could be moved from src
+                        stack_size = 1
+                        if src_cell is not pasyans_free_cell and len(src_cell) > 1 and dst_cell is not pasyans_free_cell:
+                            while pasyans_valid(src_cell[-stack_size], src_cell[-stack_size - 1]):
                                 stack_size += 1
-                                if stack_size == len(src_col):
+                                if stack_size == len(src_cell):
                                     break
 
-                        # check for invalid move
-                        if len(dest_col) > 0 and not pasyans_valid(src_col[-stack_size], dest_col[-1]):
+                        # try to move max stack size to dst, then repeat with smaller sizes until successful or empty
+                        while stack_size > 0:
+                            # check if dst is empty first, always valid if so
+                            if len(dst_cell) == 0 or pasyans_valid(src_cell[-stack_size], dst_cell[-1]):
+                                dst_cell.extend(src_cell[-stack_size:])  # copy stack from source to destination cell
+                                del src_cell[-stack_size:]  # remove stack from source cell
+                                pasyans_status_line = ''
+                                break
                             stack_size -= 1
-                            while stack_size > 0:  # try smaller stack sizes if possible
-                                if pasyans_valid(src_col[-stack_size], dest_col[-1]):
-                                    dest_col.extend(src_col[-stack_size:])  # copy stack from source to dest cell
-                                    del src_col[-stack_size:]  # remove stack from source cell
-                                    pasyans_status_line = ''
-                                    break
-                                stack_size -= 1
-                            if stack_size == 0:
-                                pasyans_status_line = 'invalid move'
 
-                        else:
-                            dest_col.extend(src_col[-stack_size:])  # copy stack from source to destination cell
-                            del src_col[-stack_size:]  # remove stack from source cell
-                            pasyans_status_line = ''
+                        if stack_size == 0:
+                            pasyans_status_line = 'invalid move'
 
             # handle undo commands
             # elif pasyans_command == 'undo':
