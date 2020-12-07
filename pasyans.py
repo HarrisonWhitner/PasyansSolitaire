@@ -59,6 +59,10 @@ RANK_TO_STR = {Rank.ACE: 'A',  # for converting rank to string
 
 
 class Card:
+    """
+    Represents a single card in a french suited, standard 52 card deck.
+    """
+
     rank = None
     suit = None
 
@@ -81,6 +85,10 @@ class Card:
 
 
 class Deck:
+    """
+    Represents a french suited, standard 52 card deck.
+    """
+
     cards = [Card(rank, suit) for suit in Suit for rank in Rank]  # 52 card deck unsorted default, top card is last
 
     def __init__(self, cards='full'):
