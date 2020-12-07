@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
 
-# Harrison Whitner 8/24/20
-
 from enum import Enum, IntEnum  # for suits and ranks of cards
 from random import shuffle  # for shuffling cards in a deck
 from termcolor import colored  # for colored card text
 from sys import exit  # for game quit
 import os  # for clearing shell
+import doctest  # for simple testing
+
+"""
+TITLE: Pasyans (пасьянс in Russian, "patience" in English)
+DESCRIPTION: A simple to play, easy to install solitaire-esqe game played in a terminal
+AUTHOR: Harrison Whitner
+START DATE: 8/24/20
+"""
+
+""" CONSTANTS """
 
 
 class Suit(Enum):
@@ -70,12 +78,30 @@ class Card:
         self.rank = rank
         self.suit = suit
 
-    # for checking if this and another card have different colors
-    def diff_color(self, other) -> bool:
-        return (self.suit in RED_SUITS and other.suit in BLACK_SUITS) \
-               or (self.suit in BLACK_SUITS and other.suit in RED_SUITS)
+    def diff_color(self, other: 'Card') -> bool:
+        """
+        Checks whether this and another card have different colors.
+        :param other: Another card to check for color equivalence.
+        :return: True if the card's colors differ, false otherwise.
+
+        >>> Card(Rank.ACE, Suit.SPADE).diff_color(Card(Rank.KING, Suit.CLUB))
+        False
+
+        >>> Card(Rank.ACE, Suit.SPADE).diff_color(Card(Rank.QUEEN, Suit.DIAMOND))
+        True
+        """
+        red_and_other_black = self.suit in RED_SUITS and other.suit in BLACK_SUITS
+        black_and_other_red = self.suit in BLACK_SUITS and other.suit in RED_SUITS
+        return red_and_other_black or black_and_other_red
 
     def to_str(self) -> str:
+        """
+        Converts the card to a string representation.
+        :return: A string with the details of the card.
+
+        >>> Card(Rank.ACE, Suit.SPADE).to_str()
+        'A  ♠'
+        """
         card_str = RANK_TO_STR[self.rank] + (' ' if self.rank == Rank.TEN else '  ') + SUIT_TO_STR[self.suit]
         if self.rank in FACE_RANKS:
             return colored(card_str, 'red' if self.suit == Suit.DIAMOND or self.suit == Suit.HEART else 'white',
@@ -103,18 +129,35 @@ class Deck:
             raise ValueError  # TODO find better error type
 
     def shuffle(self):
+        """
+        Randomizes the order of the cards in the deck.
+        :return: Nothing.
+        """
         shuffle(self.cards)
 
     def show(self):
+        """
+        Prints details on each card within the deck.
+        :return: Nothing.
+        """
         for card in self.cards:
             print(card.to_str())
 
-    def draw(self):
+    def draw(self) -> Card:
+        """
+        Pulls a card from the top of the deck.
+        :return: A single card, or None if the deck is empty.
+        """
         if len(self.cards) == 0:
             return None
         return self.cards.pop()
 
     def add(self, card: Card):
+        """
+        Adds a card to the end of the deck.
+        :param card: A card to be placed on top of the deck.
+        :return: Nothing.
+        """
         self.cards.append(card)
 
 
@@ -156,6 +199,7 @@ if __name__ == '__main__':  # main guard
         # create free cell
         pasyans_free_cell = []
 
+
         # function for showing current game state
         def pasyans_show():
 
@@ -186,6 +230,7 @@ if __name__ == '__main__':  # main guard
             # add blank line at bottom for spacing
             print()
 
+
         # function for checking if two cards are in a valid order
         def pasyans_valid(first, second) -> bool:
 
@@ -201,12 +246,14 @@ if __name__ == '__main__':  # main guard
             else:
                 return first.diff_color(second) and first.rank == second.rank - 1
 
+
         # checks whether the current game state is a win
         def pasyans_check_win() -> bool:
 
             # check that every cell is in a valid order (empty is valid) and free cell is empty
             return all([all([pasyans_valid(cell[-i], cell[-i - 1]) for i in range(1, len(cell))])
                         if len(cell) > 0 else True for cell in pasyans_cells]) and len(pasyans_free_cell) == 0
+
 
         # start game loop
         pasyans_win = False
@@ -260,7 +307,8 @@ if __name__ == '__main__':  # main guard
 
                         # determine the max stack size (number of cards) that could be moved from src
                         stack_size = 1
-                        if src_cell is not pasyans_free_cell and len(src_cell) > 1 and dst_cell is not pasyans_free_cell:
+                        if src_cell is not pasyans_free_cell and len(
+                                src_cell) > 1 and dst_cell is not pasyans_free_cell:
                             while pasyans_valid(src_cell[-stack_size], src_cell[-stack_size - 1]):
                                 stack_size += 1
                                 if stack_size == len(src_cell):
