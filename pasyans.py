@@ -1,7 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 from cards import Card, Deck, Rank, CardGameState
-import os  # for clearing shell
+from sys import argv  # For handling command line args
+import os  # For clearing shell
 
 """
 TITLE: Pasyans (пасьянс in Russian, "patience" in English)
@@ -20,8 +21,8 @@ class PasyansGameState(CardGameState):
                        'win': ['win']}
     cell_names = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'F', 'f']
 
-    def __init__(self):
-        super().__init__(self.ranks)
+    def __init__(self, debug_mode=False):
+        super().__init__(self.ranks, debug_mode)
         self.deck.shuffle()
         self.cells = [[self.deck.draw() for i in range(4)] for j in range(9)]
         self.free_cell = None
@@ -197,7 +198,7 @@ def pasyans_solve_command(gs: PasyansGameState):
     pass  # TODO implement solve command
 
 
-def pasyans_main():
+def pasyans_main(debug_mode=False):
     """Starts the the game.
     The game operates through 2 loops: the session loop and the game loop.
     The session loop represents the current Pasyans session and iterates through 'games' of Pasyans.
@@ -205,7 +206,7 @@ def pasyans_main():
     """
 
     # Create the game state
-    pasyans_gs = PasyansGameState()
+    pasyans_gs = PasyansGameState(debug_mode)
 
     # Session loop, resets game after win achieved
     while not pasyans_gs.ready_to_exit:
@@ -234,4 +235,7 @@ def pasyans_main():
 
 
 if __name__ == '__main__':  # Main guard
-    pasyans_main()
+
+    debug_flag = '-d' in argv[1:] or '--debug' in argv[1:]
+
+    pasyans_main(debug_flag)

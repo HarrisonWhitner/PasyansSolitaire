@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from enum import Enum, IntEnum  # for suits and ranks of cards
-from random import shuffle  # for shuffling cards in a deck
-from termcolor import colored  # for colored card text
-import doctest  # for simple testing
+from enum import Enum, IntEnum  # For suits and ranks of cards
+from random import shuffle  # For shuffling cards in a deck
+from termcolor import colored  # For colored card text
+import doctest  # For simple testing
 
 """ CONSTANTS """
 
@@ -31,12 +31,12 @@ class Rank(IntEnum):
     KING = 13
 
 
-SUIT_TO_STR = {Suit.HEART: '♥',  # for converting suit enum to symbol
+SUIT_TO_STR = {Suit.HEART: '♥',  # For converting suit enum to symbol
                Suit.DIAMOND: '♦',
                Suit.CLUB: '♣',
                Suit.SPADE: '♠'}
 
-RANK_TO_STR = {Rank.ACE: 'A',  # for converting rank to string
+RANK_TO_STR = {Rank.ACE: 'A',  # For converting rank to string
                Rank.TWO: '2',
                Rank.THREE: '3',
                Rank.FOUR: '4',
@@ -131,5 +131,6 @@ class CardGameState:
     command = ''
     command_args = []
 
-    def __init__(self, ranks):
+    def __init__(self, ranks, debug_mode=False):
         self.deck = Deck(ranks)
+        self.debug_mode = debug_mode
